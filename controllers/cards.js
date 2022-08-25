@@ -70,7 +70,7 @@ const likeCard = (req, res) => {
       if (err.name === 'CastError') {
         return res
           .status(INVALID_DATA_ERROR_CODE)
-          .send({ message: 'Переданы некорректные данные для постановки/снятии лайка.', err });
+          .send({ message: 'Переданы некорректные данные для постановки/снятии лайка.' });
       }
       return res
         .status(SERVER_ERROR_CODE)
