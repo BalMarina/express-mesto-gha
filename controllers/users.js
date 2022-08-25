@@ -1,5 +1,6 @@
 const User = require('../models/user');
 
+const SUCCESS_CODE = 200;
 const INVALID_DATA_ERROR_CODE = 400;
 const NOT_FOUND_ERROR_CODE = 404;
 const SERVER_ERROR_CODE = 500;
@@ -22,8 +23,13 @@ const getUserById = (req, res) => {
       }
       return res.send(user);
     })
-    .catch(() => {
-      res
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res
+          .status(INVALID_DATA_ERROR_CODE)
+          .send({ message: 'Передан некорректный _id пользователя.' });
+      }
+      return res
         .status(SERVER_ERROR_CODE)
         .send({ message: 'Произошла ошибка на сервере.' });
     });
@@ -47,7 +53,7 @@ const createUser = (req, res) => {
 
 const updateUser = (req, res) => {
   const { name, about } = req.body;
-  const { userId } = req.user._id;
+  const userId = req.user._id;
   User.findOneAndUpdate(
     { _id: userId },
     { name, about },
@@ -62,7 +68,7 @@ const updateUser = (req, res) => {
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: 'Пользователь по указанному _id не найден.' });
       }
-      return res.send(user);
+      return res.status(SUCCESS_CODE).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -78,7 +84,7 @@ const updateUser = (req, res) => {
 
 const updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  const { userId } = req.user._id;
+  const userId = req.user._id;
   User.findOneAndUpdate(
     { _id: userId },
     { avatar },
@@ -93,7 +99,7 @@ const updateAvatar = (req, res) => {
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: 'Пользователь по указанному _id не найден.' });
       }
-      return res.send(user);
+      return res.status(SUCCESS_CODE).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {

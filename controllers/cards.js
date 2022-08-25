@@ -40,8 +40,13 @@ const delCard = (req, res) => {
       }
       return res.send(cards);
     })
-    .catch(() => {
-      res
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res
+          .status(INVALID_DATA_ERROR_CODE)
+          .send({ message: 'Переданы невалидный _id карточки.' });
+      }
+      return res
         .status(SERVER_ERROR_CODE)
         .send({ message: 'Произошла ошибка на сервере.' });
     });
