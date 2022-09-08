@@ -3,6 +3,8 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const { errors } = require('celebrate');
 
 const mongoose = require('mongoose');
 
@@ -12,6 +14,8 @@ const router = require('./routes/index');
 const errorsHandler = require('./middlewares/errors-handler');
 
 const app = express();
+
+app.use(helmet());
 
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
@@ -29,6 +33,7 @@ app.use(bodyParser.json());
 app.use(router);
 app.use(cookieParser());
 app.use(errorsHandler());
+app.use(errors());
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

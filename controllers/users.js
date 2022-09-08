@@ -1,65 +1,53 @@
+const { NODE_ENV, JWT_SECRET } = process.env;
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-const SUCCESS_CODE = 200;
-const INVALID_DATA_ERROR_CODE = 400;
-const NOT_FOUND_ERROR_CODE = 404;
-const SERVER_ERROR_CODE = 500;
+const InvalidDataError = require('../errors/invalid-data-error');
+// const JwtError = require('../errors/jwt-error');
+const NotFoundError = require('../errors/not-found-error');
+const SignupEmailError = require('../errors/signup-email-error');
 
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch(() => res
-      .status(SERVER_ERROR_CODE)
-      .send({ message: 'Произошла ошибка на сервере.' }));
+    .catch(next);
 };
 
-const getUserById = (req, res) => {
+const getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден.' });
+        throw new NotFoundError('Пользователь по указанному _id не найден.');
       }
       return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res
-          .status(INVALID_DATA_ERROR_CODE)
-          .send({ message: 'Передан некорректный _id пользователя.' });
+        next(new InvalidDataError('Передан некорректный _id пользователя.'));
       }
-      return res
-        .status(SERVER_ERROR_CODE)
-        .send({ message: 'Произошла ошибка на сервере.' });
+      next(err);
     });
 };
 
-const getCurrentUser = (req, res) => {
+const getCurrentUser = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден.' });
+        throw new NotFoundError('Пользователь по указанному _id не найден.');
       }
       return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res
-          .status(INVALID_DATA_ERROR_CODE)
-          .send({ message: 'Передан некорректный _id пользователя.' });
+        next(new InvalidDataError('Передан некорректный _id пользователя.'));
       }
-      return res
-        .status(SERVER_ERROR_CODE)
-        .send({ message: 'Произошла ошибка на сервере.' });
+      next(err);
     });
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -70,17 +58,16 @@ const createUser = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res
-          .status(INVALID_DATA_ERROR_CODE)
-          .send({ message: 'Переданы некорректные данные при создании пользователя.' });
+        next(new InvalidDataError('Переданы некорректные данные при создании пользователя.'));
       }
-      return res
-        .status(SERVER_ERROR_CODE)
-        .send({ message: 'Произошла ошибка на сервере.' });
+      if (err.code === 11000) {
+        next(new SignupEmailError(`Пользователь с email ${req.body.email} уже зарегистрирован`));
+      }
+      next(err);
     });
 };
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   const { name, about } = req.body;
   const userId = req.user._id;
   User.findOneAndUpdate(
@@ -93,25 +80,19 @@ const updateUser = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден.' });
+        throw new NotFoundError('Пользователь по указанному _id не найден.');
       }
-      return res.status(SUCCESS_CODE).send(user);
+      return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res
-          .status(INVALID_DATA_ERROR_CODE)
-          .send({ message: 'Преданы некорректные данные при обновлении профиля' });
+        next(new InvalidDataError('Переданы некорректные данные при обновлении профиля.'));
       }
-      return res
-        .status(SERVER_ERROR_CODE)
-        .send({ message: 'Произошла ошибка на сервере.' });
+      next(err);
     });
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   const userId = req.user._id;
   User.findOneAndUpdate(
@@ -124,42 +105,33 @@ const updateAvatar = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: 'Пользователь по указанному _id не найден.' });
+        throw new NotFoundError('Пользователь по указанному _id не найден.');
       }
-      return res.status(SUCCESS_CODE).send(user);
+      return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res
-          .status(INVALID_DATA_ERROR_CODE)
-          .send({ message: 'Переданы некорректные данные при обновлении аватара.' });
+        next(new InvalidDataError('Переданы некорректные данные при обновлении аватара.'));
       }
-      return res
-        .status(SERVER_ERROR_CODE)
-        .send({ message: 'Произошла ошибка на сервере.' });
+      next(err);
     });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
     .then(() => {
       const token = jwt.sign(
         { _id: '6305e24749b35cc2a3d01d93' },
-        process.env.JWT_SECRET,
-        // записать JWT в httpOnly куку Или отправить в теле ответа
+        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
         { expiresIn: '7d' },
       );
       res.cookie('jwt', token, { httpOnly: true, sameSite: true });
 
       res.send({ token });
     })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
-    });
+    .catch(next);
 };
 
 module.exports = {
