@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const SUCCESS_CODE = 200;
@@ -35,9 +37,36 @@ const getUserById = (req, res) => {
     });
 };
 
+const getCurrentUser = (req, res) => {
+  User.findById(req.params.userId)
+    .then((user) => {
+      if (!user) {
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: 'Пользователь по указанному _id не найден.' });
+      }
+      return res.send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res
+          .status(INVALID_DATA_ERROR_CODE)
+          .send({ message: 'Передан некорректный _id пользователя.' });
+      }
+      return res
+        .status(SERVER_ERROR_CODE)
+        .send({ message: 'Произошла ошибка на сервере.' });
+    });
+};
+
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  bcrypt.hash({ password }, 10)
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -113,10 +142,32 @@ const updateAvatar = (req, res) => {
     });
 };
 
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then(() => {
+      const token = jwt.sign(
+        { _id: '6305e24749b35cc2a3d01d93' },
+        process.env.JWT_SECRET,
+        // записать JWT в httpOnly куку Или отправить в теле ответа
+        { expiresIn: '7d' },
+      );
+      res.cookie('jwt', token, { httpOnly: true, sameSite: true });
+
+      res.send({ token });
+    })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
+    });
+};
+
 module.exports = {
   getUsers,
   getUserById,
+  getCurrentUser,
   createUser,
   updateUser,
   updateAvatar,
+  login,
 };
