@@ -63,7 +63,7 @@ const validityAvatar = celebrate({
 const validitySignup = celebrate({
   body: Joi.object().keys({
     email: checkEmail,
-    password: Joi.string().required().min(4),
+    password: Joi.string().required(),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
     avatar: chekUrl,
@@ -73,7 +73,7 @@ const validitySignup = celebrate({
 const validitySignin = celebrate({
   body: Joi.object().keys({
     email: checkEmail,
-    password: Joi.string().required().min(4),
+    password: Joi.string().required(),
   }),
 });
 

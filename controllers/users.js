@@ -32,7 +32,7 @@ const getUserById = (req, res, next) => {
 };
 
 const getCurrentUser = (req, res, next) => {
-  User.findById(req.params.userId)
+  User.findById(req.user._id)
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Пользователь по указанному _id не найден.');
@@ -48,13 +48,10 @@ const getCurrentUser = (req, res, next) => {
 };
 
 const createUser = (req, res, next) => {
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
-  bcrypt.hash({ password }, 10)
-    .then((hash) => User.create({
-      name, about, avatar, email, password: hash,
-    }))
+  const { password } = req.body;
+  const params = Object.fromEntries(Object.entries(req.body).filter(([, v]) => Boolean(v)));
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({ ...params, password: hash }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -121,9 +118,9 @@ const login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
-    .then(() => {
+    .then((r) => {
       const token = jwt.sign(
-        { _id: '6305e24749b35cc2a3d01d93' },
+        { _id: r._id },
         NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
         { expiresIn: '7d' },
       );
