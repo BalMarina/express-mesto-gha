@@ -17,6 +17,7 @@ const checkEmail = Joi.string()
   });
 
 const chekUrl = Joi.string()
+  .required()
   .custom((value, helpers) => {
     if (validator.isURL(value)) return value;
     return helpers.message('Проверьте, есть ли у ссылки на изображение все параметры url');

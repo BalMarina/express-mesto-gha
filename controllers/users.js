@@ -52,7 +52,10 @@ const createUser = (req, res, next) => {
   const params = Object.fromEntries(Object.entries(req.body).filter(([, v]) => Boolean(v)));
   bcrypt.hash(password, 10)
     .then((hash) => User.create({ ...params, password: hash }))
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      const { password: p, ...data } = JSON.parse(JSON.stringify(user));
+      return res.send({ data });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new InvalidDataError('Переданы некорректные данные при создании пользователя.'));
