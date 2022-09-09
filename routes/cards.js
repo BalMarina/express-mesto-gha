@@ -7,15 +7,16 @@ const {
   likeCard,
   dislikeCard,
 } = require('../controllers/cards');
+const { validityInitialCard, validityCard } = require('../middlewares/validity-params');
 
 cardsRouter.get('/cards', getCards);
 
-cardsRouter.post('/cards', createCard);
+cardsRouter.post('/cards', validityInitialCard, createCard);
 
-cardsRouter.delete('/cards/:cardId', delCard);
+cardsRouter.delete('/cards/:cardId', validityCard, delCard);
 
-cardsRouter.put('/cards/:cardId/likes', likeCard);
+cardsRouter.put('/cards/:cardId/likes', validityCard, likeCard);
 
-cardsRouter.delete('/cards/:cardId/likes', dislikeCard);
+cardsRouter.delete('/cards/:cardId/likes', validityCard, dislikeCard);
 
 module.exports = cardsRouter;

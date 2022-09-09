@@ -33,7 +33,7 @@ const delCard = (req, res, next) => {
       if (cards.owner.toString() !== req.user._id) {
         throw new UserAccessError('Вы не можете удалить чужую карточку');
       }
-      return res.send(cards);
+      return res.status(200).send(cards);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -83,7 +83,7 @@ const dislikeCard = (req, res, next) => {
       if (!cards) {
         throw new NotFoundError('Передан несуществующий _id карточки.');
       }
-      return res.send(cards);
+      return res.status(200).send(cards);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
