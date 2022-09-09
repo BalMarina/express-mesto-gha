@@ -4,11 +4,8 @@ const JwtError = require('../errors/jwt-error');
 
 const auth = (req, res, next) => {
   const { authorization } = req.headers;
-
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .send({ message: 'Необходима авторизация' });
+    return next(new JwtError('Ошибка токена'));
   }
 
   const token = authorization.replace('Bearer ', '');

@@ -9,8 +9,8 @@ const cardsRouter = require('./cards');
 const { createUser, login } = require('../controllers/users');
 const { validitySignup, validitySignin } = require('../middlewares/validity-params');
 
-router.use('/users', userRouter);
-router.use('/cards', cardsRouter);
+router.use(userRouter);
+router.use(cardsRouter);
 router.use(validateAuth, auth);
 
 router.post('/signin', validitySignin, login);
