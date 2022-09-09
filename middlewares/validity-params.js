@@ -22,6 +22,13 @@ const chekUrl = Joi.string()
     return helpers.message('Проверьте, есть ли у ссылки на изображение все параметры url');
   });
 
+const chekLink = Joi.string()
+  .required()
+  .custom((value, helpers) => {
+    if (validator.isURL(value)) return value;
+    return helpers.message('Проверьте, есть ли у ссылки на изображение все параметры url');
+  });
+
 const validityLogin = celebrate({
   headers: Joi.object().keys({
     authorization: Joi.string().required(),
@@ -37,7 +44,7 @@ const validityUser = celebrate({
 const validityInitialCard = celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    link: chekUrl,
+    link: chekLink,
   }),
 });
 
