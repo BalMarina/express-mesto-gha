@@ -1,11 +1,10 @@
-const { NODE_ENV, JWT_SECRET } = process.env;
+const { NODE_ENV, JWT_SECRET = 'super-secret' } = process.env;
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const InvalidDataError = require('../errors/invalid-data-error');
-// const JwtError = require('../errors/jwt-error');
 const NotFoundError = require('../errors/not-found-error');
 const SignupEmailError = require('../errors/signup-email-error');
 
@@ -26,8 +25,9 @@ const getUserById = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new InvalidDataError('Передан некорректный _id пользователя.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -42,8 +42,9 @@ const getCurrentUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new InvalidDataError('Передан некорректный _id пользователя.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -59,11 +60,11 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new InvalidDataError('Переданы некорректные данные при создании пользователя.'));
-      }
-      if (err.code === 11000) {
+      } else if (err.code === 11000) {
         next(new SignupEmailError(`Пользователь с email ${req.body.email} уже зарегистрирован`));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -87,8 +88,9 @@ const updateUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new InvalidDataError('Переданы некорректные данные при обновлении профиля.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -112,8 +114,9 @@ const updateAvatar = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new InvalidDataError('Переданы некорректные данные при обновлении аватара.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -127,8 +130,6 @@ const login = (req, res, next) => {
         NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
         { expiresIn: '7d' },
       );
-      res.cookie('jwt', token, { httpOnly: true, sameSite: true });
-
       res.send({ token });
     })
     .catch(next);

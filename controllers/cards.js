@@ -17,15 +17,16 @@ const createCard = (req, res, next) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new InvalidDataError(err.message);
+        next(new InvalidDataError('Некорректные данные для создания карточки'));
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 };
 
 const delCard = (req, res, next) => {
   const { cardId } = req.params;
-  Card.findByIdAndRemove(cardId)
+  Card.findById(cardId)
     .then((cards) => {
       if (!cards) {
         throw new NotFoundError('Карточка с указанным _id не найдена.');
@@ -33,13 +34,15 @@ const delCard = (req, res, next) => {
       if (cards.owner.toString() !== req.user._id) {
         throw new UserAccessError('Вы не можете удалить чужую карточку');
       }
-      return res.status(200).send(cards);
+      return cards.remove()
+        .then(() => res.send({ message: 'Карточка удалена' }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new InvalidDataError('Передан невалидный _id карточки.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -63,8 +66,9 @@ const likeCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new InvalidDataError('Переданы некорректные данные для постановки/снятии лайка.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -88,8 +92,9 @@ const dislikeCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new InvalidDataError('Переданы некорректные данные для постановки/снятии лайка.'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 

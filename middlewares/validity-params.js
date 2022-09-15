@@ -29,12 +29,6 @@ const chekLink = Joi.string()
     return helpers.message('Проверьте, есть ли у ссылки на изображение все параметры url');
   });
 
-const validityLogin = celebrate({
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(),
-});
-
 const validityUser = celebrate({
   params: Joi.object().keys({
     userId: checkId,
@@ -85,7 +79,6 @@ const validitySignin = celebrate({
 });
 
 module.exports = {
-  validityLogin,
   validityUser,
   validityInitialCard,
   validityCard,
